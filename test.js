@@ -14,6 +14,9 @@ describe('MongoCollection', () => {
     .then((con) => {
       connection = con;
       db = con.db('mongo-redis-future');
+      return (new MongoCollection('users', db)).remove({});
+    })
+    .then(() => {
       done();
     })
     .catch(err => done(err));
@@ -24,6 +27,19 @@ describe('MongoCollection', () => {
         const collection = new MongoCollection('users', db);
         const arr = collection.find({}).toArraySync();
         assert.ok(arr instanceof Array);
+        done();
+      }
+      Fiber(test).run();
+    });
+    it('toArraySync should return only requested fields', (done) => {
+      function test() {
+        const collection = new MongoCollection('users', db);
+        collection.removeSync({});
+        collection.insertSync({ _id: 'test', name: 'test' });
+        const arr = collection.find({}, { fields: { _id: 1 } }).toArraySync();
+        assert.ok(arr instanceof Array);
+        assert.equal(arr[0]._id, 'test');
+        assert.equal(arr[0].name, undefined);
         done();
       }
       Fiber(test).run();
@@ -89,7 +105,6 @@ describe('MongoCollection', () => {
       function test() {
         let called = false;
         function publishFn(collection, msg) {
-          console.log(collection, msg);
           if (!called) {
             called = true;
             assert.equal(collection, 'users');

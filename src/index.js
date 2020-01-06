@@ -12,7 +12,7 @@ catch (e) {
 
 function cursorFetch() {
   const waitForFind = new Future();
-  this._toArray()
+  this.toArray()
   .then(arr => waitForFind.return(arr))
   .catch(err => waitForFind.throw(err));
   return waitForFind.wait();
@@ -20,7 +20,7 @@ function cursorFetch() {
 
 function cursorForEach(fn) {
   const waitForFind = new Future();
-  this._forEach(fn)
+  this.forEach(fn)
   .then(arr => waitForFind.return(arr))
   .catch(err => waitForFind.throw(err));
   return waitForFind.wait();
@@ -28,7 +28,7 @@ function cursorForEach(fn) {
 
 function cursorMap(fn) {
   const waitForFind = new Future();
-  this._map(fn)._toArray()
+  this.map(fn).toArray()
   .then(arr => waitForFind.return(arr))
   .catch(err => waitForFind.throw(err));
   return waitForFind.wait();
@@ -36,7 +36,7 @@ function cursorMap(fn) {
 
 function cursorCount(fn) {
   const waitForFind = new Future();
-  this._count(fn)
+  this.count(fn)
   .then(arr => waitForFind.return(arr))
   .catch(err => waitForFind.throw(err));
   return waitForFind.wait();
@@ -61,7 +61,7 @@ export class MongoCollection {
 
   find(selector, options = {}) {
     const db = this._getDbSync();
-    let cursor = db.collection(this._collectionName).find(selector, options.fields || {});
+    let cursor = db.collection(this._collectionName).find(selector, options || {});
     if (options.sort) {
       cursor = cursor.sort(options.sort);
     }
@@ -72,14 +72,10 @@ export class MongoCollection {
       cursor.limit(options.limit);
     }
 
-    cursor._toArray = cursor.toArray;
     cursor.toArraySync = cursorFetch.bind(cursor);
     cursor.fetchSync = cursorFetch.bind(cursor);
-    cursor._forEach = cursor.forEach;
     cursor.forEachSync = cursorForEach.bind(cursor);
-    cursor._map = cursor.map;
     cursor.mapSync = cursorMap.bind(cursor);
-    cursor._count = cursor.count;
     cursor.countSync = cursorCount.bind(cursor);
 
     return cursor;
