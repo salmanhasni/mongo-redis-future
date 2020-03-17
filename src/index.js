@@ -1,5 +1,4 @@
 import _ from 'underscore';
-import { redisInsert, redisUpdate, redisRemove } from './redis';
 
 let Future;
 try {
@@ -7,6 +6,12 @@ try {
 }
 catch (e) {
   Future = null;
+}
+try {
+  const { redisInsert, redisUpdate, redisRemove } = require('./redis');
+}
+catch (e) {
+
 }
 
 
