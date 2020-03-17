@@ -7,8 +7,15 @@ try {
 catch (e) {
   Future = null;
 }
+
+let redisInsert;
+let redisUpdate;
+let redisRemove;
 try {
-  const { redisInsert, redisUpdate, redisRemove } = require('./redis');
+  const { _redisInsert, _redisUpdate, _redisRemove } = require('./redis');
+  redisInsert = _redisInsert;
+  redisUpdate = _redisUpdate;
+  redisRemove = _redisRemove;
 }
 catch (e) {
 
@@ -133,7 +140,7 @@ export class MongoCollection {
   _aggregate(pipeline) {
     return db.collection(this._collectionName)
     .aggregate(pipeline)
-    .toArray()
+    .toArray();
   }
 
   _update(selector, modifier, options) {
