@@ -44,10 +44,21 @@ function cursorCount(fn) {
 
 /* eslint-disable import/prefer-default-export */
 export class MongoCollection {
-  constructor(collectionName, mongoDb, redisDb) {
+  constructor(collectionName, mongoDb, redisDb, { nativeSync = false } = {}) {
     this._collectionName = collectionName;
     this._mongoDb = mongoDb;
     this._redisDb = redisDb;
+    this.nativeSync = nativeSync;
+    if (nativeSync) {
+      this.update = this.updateSync;
+      this.remove = this.removeSync;
+      this.findOne = this.findOneSync;
+      this.insert = this.insertSync;
+    }
+    else {
+      this.update = this._update;
+      this.
+    }
   }
 
   // TODO: for both of these we need to handle if the connection has died.
@@ -59,7 +70,7 @@ export class MongoCollection {
     return Promise.resolve(this._mongoDb);
   }
 
-  find(selector, options = {}) {
+  _find(selector, options = {}) {
     const db = this._getDbSync();
     let cursor = db.collection(this._collectionName).find(selector, options || {});
     if (options.sort) {
@@ -74,20 +85,26 @@ export class MongoCollection {
 
     cursor.toArraySync = cursorFetch.bind(cursor);
     cursor.fetchSync = cursorFetch.bind(cursor);
+    cursor.fetchSync = cursorFetch.bind(cursor);
     cursor.forEachSync = cursorForEach.bind(cursor);
     cursor.mapSync = cursorMap.bind(cursor);
     cursor.countSync = cursorCount.bind(cursor);
+
+    if (this.nativeSync) {
+      cursor.fetch = cursor.fetchSync;
+      cursor.map = cursor.mapSync;
+    }
 
     return cursor;
   }
 
   findOneSync(selector, options = {}) {
-    return this.find(selector, _.extend(options, { limit: 1 })).toArraySync()[0];
+    return this._find(selector, _.extend(options, { limit: 1 })).toArraySync()[0];
   }
 
   updateSync(selector, modifier, options) {
     const waitForUpsert = new Future();
-    this.update(selector, modifier, options)
+    this._update(selector, modifier, options)
     .then(res => waitForUpsert.return(res))
     .catch(err => waitForUpsert.throw(err));
     return waitForUpsert.wait();
@@ -95,7 +112,7 @@ export class MongoCollection {
 
   insertSync(doc) {
     const waitForInsert = new Future();
-    this.insert(doc)
+    this._insert(doc)
     .then(res => waitForInsert.return(res.ops))
     .catch(err => waitForInsert.throw(err));
     return waitForInsert.wait();
@@ -103,7 +120,7 @@ export class MongoCollection {
 
   removeSync(selector) {
     const waitForRemove = new Future();
-    this.remove(selector)
+    this._remove(selector)
     .then(res => waitForRemove.return(res))
     .catch(err => waitForRemove.throw(err));
     return waitForRemove.wait();
@@ -112,13 +129,19 @@ export class MongoCollection {
   aggregateSync(pipeline) {
     const db = this._getDbSync();
     const waitForAggregate = new Future();
-    db.collection(this._collectionName).aggregate(pipeline).toArray()
+    this._aggregate(pipeline)
     .then(res => waitForAggregate.return(res))
     .catch(err => waitForAggregate.throw(err));
     return waitForAggregate.wait();
   }
 
-  update(selector, modifier, options) {
+  _aggregate(pipeline) {
+    return db.collection(this._collectionName)
+    .aggregate(pipeline)
+    .toArray()
+  }
+
+  _update(selector, modifier, options) {
     return this._getDb()
     .then(db => db.collection(this._collectionName).updateMany(selector, modifier, options))
     .then((res) => {
@@ -133,7 +156,7 @@ export class MongoCollection {
     });
   }
 
-  remove(selector) {
+  _remove(selector) {
     return this._getDb()
     .then((db) => {
       if (this._redisDb) {
@@ -147,7 +170,7 @@ export class MongoCollection {
     .then(db => db.collection(this._collectionName).deleteMany(selector));
   }
 
-  insert(doc) {
+  _insert(doc) {
     return this._getDb()
     .then(db => db.collection(this._collectionName).insertOne(doc))
     .then((res) => {
@@ -156,5 +179,37 @@ export class MongoCollection {
       }
       return res;
     });
+  }
+
+  find(selector, options) {
+    return this._find(selector, options);
+  }
+
+  insert(doc) {
+    if (this.nativeSync) {
+      return this.insertSync(doc);
+    }
+    return this._insert(doc);
+  }
+
+  update(selector, modifier, options) {
+    if (this.nativeSync) {
+      return this.updateSync(selector, modifier, options);
+    }
+    return this._update(selector, modifier, options);
+  }
+
+  remove(selector) {
+    if (this.nativeSync) {
+      return this.removeSync(selector);
+    }
+    return this._remove(selector);
+  }
+
+  aggregate(pipeline) {
+    if (this.nativeSync) {
+      return this.aggregateSync(pipeline);
+    }
+    return this._aggregate(pipeline);
   }
 }
