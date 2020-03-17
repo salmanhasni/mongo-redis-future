@@ -49,16 +49,6 @@ export class MongoCollection {
     this._mongoDb = mongoDb;
     this._redisDb = redisDb;
     this.nativeSync = nativeSync;
-    if (nativeSync) {
-      this.update = this.updateSync;
-      this.remove = this.removeSync;
-      this.findOne = this.findOneSync;
-      this.insert = this.insertSync;
-    }
-    else {
-      this.update = this._update;
-      this.
-    }
   }
 
   // TODO: for both of these we need to handle if the connection has died.
