@@ -1,24 +1,12 @@
-import _ from 'underscore';
+import _ from "underscore";
+import { redisInsert, redisUpdate, redisRemove } from "./redis.js";
 
 let Future;
 try {
-  Future = require('fibers/future');
+  Future = require("fibers/future");
 }
 catch (e) {
   Future = null;
-}
-
-let redisInsert;
-let redisUpdate;
-let redisRemove;
-try {
-  const { _redisInsert, _redisUpdate, _redisRemove } = require('./redis');
-  redisInsert = _redisInsert;
-  redisUpdate = _redisUpdate;
-  redisRemove = _redisRemove;
-}
-catch (e) {
-
 }
 
 
@@ -129,7 +117,6 @@ export class MongoCollection {
   }
 
   aggregateSync(pipeline) {
-    const db = this._getDbSync();
     const waitForAggregate = new Future();
     this._aggregate(pipeline)
     .then(res => waitForAggregate.return(res))
@@ -138,6 +125,7 @@ export class MongoCollection {
   }
 
   _aggregate(pipeline) {
+    const db = this._getDbSync();
     return db.collection(this._collectionName)
     .aggregate(pipeline)
     .toArray();
@@ -149,10 +137,13 @@ export class MongoCollection {
     .then((res) => {
       if (this._redisDb) {
         const fields = _.flatten(Object.keys(modifier).map(sub => Object.keys(sub)));
-        return this.find(selector, { fields: { _id: 1 } }).forEach((doc) => {
-          redisUpdate(this._redisDb, this._collectionName, doc._id, fields);
-        })
-        .then(() => res);
+        if (!selector._id || (typeof selector._id) !== "string") {
+          return this.find(selector, { fields: { _id: 1 } }).forEach((doc) => {
+            redisUpdate(this._redisDb, this._collectionName, doc._id, fields);
+          })
+          .then(() => res);
+        }
+        redisUpdate(this._redisDb, this._collectionName, selector._id, fields);
       }
       return res;
     });
@@ -172,12 +163,12 @@ export class MongoCollection {
     .then(db => db.collection(this._collectionName).deleteMany(selector));
   }
 
-  _insert(doc) {
+  _insert(doc, options) {
     return this._getDb()
     .then(db => db.collection(this._collectionName).insertOne(doc))
     .then((res) => {
       if (this._redisDb) {
-        redisInsert(this._redisDb, this._collectionName, res.ops[0]._id);
+        redisInsert(this._redisDb, this._collectionName, res.ops[0]._id, options);
       }
       return res;
     });

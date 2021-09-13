@@ -16,8 +16,8 @@ export const Events = {
 };
 
 
-export function redisInsert(redis, collection, docId) {
-  redis.publish(collection, JSON.stringify({
+export function redisInsert(redis, collection, docId, options) {
+  redis.publish((options && options.channel) || collection, JSON.stringify({
     [RedisPipe.EVENT]: Events.INSERT,
     [RedisPipe.DOC]: { _id: docId }
   }));
