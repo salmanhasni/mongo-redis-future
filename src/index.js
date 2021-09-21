@@ -1,14 +1,6 @@
 import _ from "underscore";
 import { redisInsert, redisUpdate, redisRemove } from "./redis.js";
-
-let Future;
-try {
-  Future = require("fibers/future");
-}
-catch (e) {
-  Future = null;
-}
-
+import { Future } from "fiber/future";
 
 function cursorFetch() {
   const waitForFind = new Future();
