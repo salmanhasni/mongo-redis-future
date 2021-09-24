@@ -1,5 +1,7 @@
-import _ from "underscore";
-import { redisInsert, redisUpdate, redisRemove } from "./redis.js";
+const _ = require('underscore');
+const Redis = require('./redis');
+const { redisInsert, redisRemove, redisUpdate } = Redis;
+
 
 let Future;
 try {
