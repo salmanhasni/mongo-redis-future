@@ -2,8 +2,9 @@
   "presets": [
                 ["@babel/preset-env", {
                     "targets": {
-                        "node": "8"
-                    }
+                        "node": "6.10"
+                    },
+                    "modules": false
                 }]
             ],
   "plugins": [
