@@ -1,6 +1,13 @@
 import _ from "underscore";
 import { redisInsert, redisUpdate, redisRemove } from "./redis.js";
-import { Future } from "fiber/future";
+
+let Future;
+try {
+  Future = require("fibers/future");
+}
+catch (e) {
+  Future = null;
+}
 
 function cursorFetch() {
   const waitForFind = new Future();
@@ -160,7 +167,7 @@ export class MongoCollection {
     .then(db => db.collection(this._collectionName).insertOne(doc))
     .then((res) => {
       if (this._redisDb) {
-        redisInsert(this._redisDb, this._collectionName, res.ops[0]._id, options);
+        redisInsert(this._redisDb, this._collectionName, res.ops ? res.ops[0]._id : res.insertedId, options);
       }
       return res;
     });
