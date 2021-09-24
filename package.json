@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "A package to allow for synchronous (future/fiber) communication with mongo and the optional addition of redis to make this compatible with meteor's redis-oplog package",
   "main": "src/index.js",
-  "type": "module",
   "scripts": {
     "prepare": "npm run build",
     "build": "babel src --out-dir lib --source-root=./ --copy-files",
