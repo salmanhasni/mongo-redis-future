@@ -44,7 +44,7 @@ function cursorCount(fn) {
 }
 
 /* eslint-disable import/prefer-default-export */
-module.exports = class MongoCollection {
+class MongoCollection {
   constructor(collectionName, mongoDb, redisDb, { nativeSync = false } = {}) {
     this._collectionName = collectionName;
     this._mongoDb = mongoDb;
@@ -207,3 +207,7 @@ module.exports = class MongoCollection {
     return this._aggregate(pipeline);
   }
 }
+
+module.exports = {
+    MongoCollection
+};
