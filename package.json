@@ -13,11 +13,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@bitbucket.org/znewsham/mongo-redis-future.git"
+    "url": "git+ssh://git@github.com/salmanhasi/mongo-redis-future.git"
   },
   "author": "Zack Newsham",
   "license": "ISC",
-  "homepage": "https://bitbucket.org/znewsham/mongo-redis-future#readme",
+  "homepage": "https://github.com/salmanhasni/mongo-redis-future#readme",
   "optionalDependencies": {
     "fibers": "^4.0.2",
     "redis": "^2.8.0"
